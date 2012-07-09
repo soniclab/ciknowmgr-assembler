@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project name="ciknowmgr-assembler" basedir="." default="assemble">
+	<property file="build.properties"/>
+	<property environment="env"/>
+	
+	<path id="compile.classpath">
+		<fileset dir="${env.CATALINA_HOME}/bin">
+			<include name="*.jar"/>
+		</fileset>
+		<pathelement location="${env.CATALINA_HOME}/lib"/>
+		<fileset dir="${env.CATALINA_HOME}/lib">
+			<include name="**/*.jar"/>
+		</fileset>	
+	</path>
+			
+	<taskdef resource="org/apache/catalina/ant/catalina.tasks"
+		classpathref="compile.classpath"/>
+	
+
+	<target name="clean">
+		<ant dir="${ciknowmgr.dir}" target="clean" inheritAll="false"/>
+		
+		<ant dir="${ciknow.dir}" target="clean" inheritAll="false"/>
+
+		<ant dir="${prefuse-modified.dir}" target="clean" inheritAll="false"/>
+		<ant dir="${ciknowvis.dir}" target="clean" inheritAll="false"/>
+		
+		<ant dir="${ciknowclient.dir}" target="clean" inheritAll="false"/>
+		
+		<delete dir="${build.dir}"/>
+	</target>
+			
+	<target name="assemble" description="Assemble ciknowmgr">
+		<ant dir="${ciknowmgr.dir}" target="deploy-ciknowmgr-assembler" inheritAll="false"/>		
+		<antcall target="assemble-common"/>				
+		<antcall target="publish"/>
+	</target>
+	
+	<target name="assemble-with-ssl-ciknow-only" description="Assemble with ssl for ciknow template only">
+		<ant dir="${ciknowmgr.dir}" target="deploy-ciknowmgr-assembler" inheritAll="false"/>		
+		<antcall target="assemble-common"/>	
+		<antcall target="enable-ssl-for-ciknow"/>	
+		<antcall target="publish"/>
+	</target>
+		
+	<target name="assemble-with-ssl-all" description="Assemble with ssl for both ciknowmgr and ciknow template">
+		<ant dir="${ciknowmgr.dir}" target="deploy-ciknowmgr-assembler-with-ssl" inheritAll="false"/>		
+		<antcall target="assemble-common"/>			
+		<antcall target="enable-ssl-for-ciknow"/>		
+		<antcall target="publish"/>	
+	</target>
+			
+	<target name="assemble-common">
+		<ant dir="${ciknow.dir}" target="deploy-ciknowmgr-assembler" inheritAll="false"/>
+
+		<ant dir="${prefuse-modified.dir}" target="copy2ciknowvis" inheritAll="false"/>
+		<ant dir="${ciknowvis.dir}" target="deploy-ciknowmgr-assembler" inheritAll="false"/>
+		
+		<ant dir="${ciknowclient.dir}" target="deploy-ciknowmgr-assembler" inheritAll="false"/>
+				
+		<!-- documentation -->
+		<copy toDir="${build.dir}/docs/ciknow" overwrite="true">
+			<fileset dir="${ciknowdoc.dir}/build-ciknow">
+			</fileset>
+		</copy>
+		<copy toDir="${build.dir}/docs/ciknow-vis" overwrite="true">
+			<fileset dir="${ciknowdoc.dir}/build-ciknow-vis">
+			</fileset>
+		</copy>		
+
+	</target>
+	
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: publish                      
+         - - - - - - - - - - - - - - - - - -->
+    <target name="publish">		
+    	<copy 
+    		file="${build.dir}/WEB-INF/sql/ciknow.sql" 
+    		toFile="${build.dir}/WEB-INF/template/server/WEB-INF/sql/ciknow.sql" 
+    		overwrite="true"/>
+    	
+		<replace file="${build.dir}/WEB-INF/build.xml"
+				 token="s0nic@lake" 
+        		 value="rootpassword"/>
+    	
+    	<tstamp/>
+    	
+    	<echo>Publishing ciknowmgr.war</echo>
+		<jar jarfile="ciknowmgr.${DSTAMP}.war" basedir="${build.dir}"/>	
+		<move file="ciknowmgr.${DSTAMP}.war" toDir="${publish.dir}" overwrite="true"/>
+    	<copy file="${publish.dir}/ciknowmgr.${DSTAMP}.war" toFile="${publish.dir}/ciknowmgr.war" overwrite="true"/>
+    		
+    	<echo>Publishing _ciknow.war</echo>    	
+		<jar jarfile="_ciknow.${DSTAMP}.war" basedir="${build.dir}/WEB-INF/template/temp"/>	
+		<move file="_ciknow.${DSTAMP}.war" toDir="${publish.dir}" overwrite="true"/>
+		<copy file="${publish.dir}/_ciknow.${DSTAMP}.war" toFile="${publish.dir}/_ciknow.war" overwrite="true"/>
+    	
+		<replace file="${build.dir}/WEB-INF/build.xml"
+				 token="rootpassword" 
+        		 value="s0nic@lake"/>
+    </target>
+
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: enable-ssl-for-ciknow                      
+         - - - - - - - - - - - - - - - - - -->
+    <target name="enable-ssl-for-ciknow">
+		<move 
+			file="${build.dir}/WEB-INF/template/server/WEB-INF/classes/applicationContext-security.https.xml" 
+			tofile="${build.dir}/WEB-INF/template/server/WEB-INF/classes/applicationContext-security.xml" 
+			overwrite="true"/>	
+
+		<move 
+			file="${build.dir}/WEB-INF/template/server/WEB-INF/flex/remoting-config.https.xml" 
+			tofile="${build.dir}/WEB-INF/template/server/WEB-INF/flex/remoting-config.xml" 
+			overwrite="true"/>	
+    </target>
+
+</project>
