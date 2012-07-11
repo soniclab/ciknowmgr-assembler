@@ -59,6 +59,7 @@
 		<ant dir="${ciknowclient.dir}" target="deploy-ciknowmgr-assembler" inheritAll="false"/>
 				
 		<!-- documentation -->
+		<!--
 		<copy toDir="${build.dir}/docs/ciknow" overwrite="true">
 			<fileset dir="${ciknowdoc.dir}/build-ciknow">
 			</fileset>
@@ -67,7 +68,8 @@
 			<fileset dir="${ciknowdoc.dir}/build-ciknow-vis">
 			</fileset>
 		</copy>		
-
+		-->
+		
 	</target>
 	
 	<!-- - - - - - - - - - - - - - - - - - 
