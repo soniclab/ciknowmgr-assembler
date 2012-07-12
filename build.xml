@@ -84,9 +84,19 @@
 		<replace file="${build.dir}/WEB-INF/build.xml"
 				 token="s0nic@lake" 
         		 value="rootpassword"/>
-    	
+    	    	
+    	<tstamp>
+    		<format property="start.timestamp" pattern="MM/dd/yyyy HH:mm:ss" />
+    	</tstamp>
+		<replace file="${build.dir}/WEB-INF/classes/instruction.txt"
+			token="__build.time__" 
+			value="${start.timestamp}"/>
+		
+		<replace file="${build.dir}/WEB-INF/classes/ciknowmgr.properties"
+			token="__build.time__" 
+			value="${start.timestamp}"/>
+				
     	<tstamp/>
-    	
     	<echo>Publishing ciknowmgr.war</echo>
 		<jar jarfile="ciknowmgr.${DSTAMP}.war" basedir="${build.dir}"/>	
 		<move file="ciknowmgr.${DSTAMP}.war" toDir="${publish.dir}" overwrite="true"/>
